@@ -8,7 +8,7 @@
 - Activate virtual environment and install dependencies
 
 ### Model Weights Verification
-Ensure model weights are present in:
+Model weights directory:
 - Vehicle classification: `workspace/data/runs/results/veh_cls/weights/best.pt`
 - License detection: `runs/detect/license3/weights/best.pt`
 
