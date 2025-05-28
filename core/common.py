@@ -4,7 +4,7 @@ import datetime
 import cv2
 import re
 import numpy as np
-from collections import Counter 
+from collections import Counter
 
 ################################################################################
 # Hard-coded configuration
@@ -17,7 +17,8 @@ license_text_cache = {}
 
 # Paths
 MODEL_WEIGHTS_PATH = "/workspace/data/runs/results/veh_cls/weights/best.pt"
-LOG_FILE_PATH = f"static/logs/logs_{current_date}.json"
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+LOG_FILE_PATH = os.path.join(BASE_DIR, "flask_app", "static", "logs", f"logs_{current_date}.json")
 # LOG_FILE_PATH = f"static/logs/logs.json"
 # Define class names
 CLASS_NAMES = {0: "Mil Veh", 1: "Civil Veh"}

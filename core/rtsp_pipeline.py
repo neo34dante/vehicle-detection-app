@@ -4,8 +4,8 @@ import supervision as sv
 from collections import defaultdict, deque
 from ultralytics import YOLO
 
-from license import detect_license_plate, ocr_it
-from wkg_with_sv import (
+from core.license_utils import detect_license_plate, ocr_it
+from core.wkg_with_sv import (
     MODEL_WEIGHTS_PATH,
     LOG_FILE_PATH,
     CONFIDENCE_THRESHOLD,

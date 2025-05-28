@@ -54,20 +54,23 @@ A Flask-based web application for real-time vehicle detection, classification, s
 ## Project Structure
     ```
     .
-    ├── app.py                  # Flask application
-    ├── wkg_with_sv.py         # Core detection logic
-    ├── license.py             # License plate processing
-    ├── templates/             # UI templates
-    │   ├── dashboard.html     # Analytics dashboard
-    │   └── index.html        # Main interface
-    ├── static/               # Assets and outputs
+    ├── start_app.py          # Application entry point
+    ├── core/                 # Backend processing modules
+    │   ├── common.py         # Detection configuration & helpers
+    │   ├── license_utils.py  # License plate processing
+    │   ├── video_pipeline.py # Video file pipeline
+    │   └── rtsp_pipeline.py  # RTSP stream pipeline
+    ├── flask_app/
+    │   ├── routes.py         # Flask route handlers
+    │   ├── templates/        # UI templates
+    │   └── static/           # Assets and outputs
     └── runs/                 # YOLO models
     ```
 
 ## Usage
 1. Start the Flask server:
     ```bash
-    python app.py
+    python start_app.py
     ```
 
 2. Access the web interface:

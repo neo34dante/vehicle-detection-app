@@ -8,6 +8,7 @@ import easyocr
 from ultralytics import YOLO
 
 current_date = datetime.datetime.now().strftime("%Y%m%d")  # Format: YYYYMMDD
+BASE_STATIC = os.path.join(os.path.dirname(__file__), '..', 'flask_app', 'static')
 
 # Initialize EasyOCR reader
 reader = easyocr.Reader(['en'])
@@ -30,7 +31,9 @@ def filter_text(region, ocr_result, region_threshold):
             plate.append(result[1])
     return plate
 
-def ocr_it(image, detections, track_id=None, detection_threshold=0.3, region_threshold=0.3, save_dir="static/license"):
+def ocr_it(image, detections, track_id=None, detection_threshold=0.3, region_threshold=0.3, save_dir=None):
+    if save_dir is None:
+        save_dir = os.path.join(BASE_STATIC, 'license')
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -58,7 +61,11 @@ def ocr_it(image, detections, track_id=None, detection_threshold=0.3, region_thr
 
     return recognized_texts
 
-def detect_license_plate(image, track_id=None, veh_save_dir=f"static/{current_date}/veh", license_save_dir=f"static/{current_date}/license"):
+def detect_license_plate(image, track_id=None, veh_save_dir=None, license_save_dir=None):
+    if veh_save_dir is None:
+        veh_save_dir = os.path.join(BASE_STATIC, f"{current_date}", 'veh')
+    if license_save_dir is None:
+        license_save_dir = os.path.join(BASE_STATIC, f"{current_date}", 'license')
     # Ensure the directories exist
     if not os.path.exists(veh_save_dir):
         os.makedirs(veh_save_dir)

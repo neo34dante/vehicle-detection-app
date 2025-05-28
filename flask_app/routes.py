@@ -1,42 +1,42 @@
-from flask import Flask, render_template, request, Response, jsonify
+from flask import Blueprint, render_template, request, Response, jsonify
 import os
 import cv2
 import json
 import time
 import datetime
-from wkg_with_sv import LOG_FILE_PATH
-from video_pipeline import generate_annotated_frames
-from rtsp_pipeline import generate_annotated_frames_rtsp
-# NEW: Import MySQL connector (ensure you have mysql-connector-python installed)
+from core.common import LOG_FILE_PATH
+from core.video_pipeline import generate_annotated_frames
+from core.rtsp_pipeline import generate_annotated_frames_rtsp
 import mysql.connector
 from mysql.connector import Error
 
-app = Flask(__name__)
+bp = Blueprint('main', __name__)
 
-# Directory to store uploaded videos
-UPLOAD_FOLDER = 'static/videos'
+# Base directories for uploads and logs relative to this file
+BASE_DIR = os.path.dirname(__file__)
+STATIC_DIR = os.path.join(BASE_DIR, 'static')
+
+UPLOAD_FOLDER = os.path.join(STATIC_DIR, 'videos')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-
-# Directory to store processed videos
-OUTPUT_FOLDER = 'static/processed_videos'
+OUTPUT_FOLDER = os.path.join(STATIC_DIR, 'processed_videos')
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 # Directory to store logs
-LOGS_FOLDER = 'static/logs'
+LOGS_FOLDER = os.path.join(STATIC_DIR, 'logs')
 os.makedirs(LOGS_FOLDER, exist_ok=True)
 
-@app.route('/')
+@bp.route('/')
 def index():
     """Render the main interface."""
     current_date = datetime.datetime.now().strftime("%Y%m%d")  # Format: YYYYMMDD
     return render_template('index1.html', current_date=current_date) #index1.html
 
 # NEW: Dashboard endpoint (dashboard.html to be created later)
-@app.route('/dashboard')
+@bp.route('/dashboard')
 def dashboard():
     return render_template('dashboard1.html')
 
-@app.route('/upload', methods=['POST'])
+@bp.route('/upload', methods=['POST'])
 def upload_video():
     """
     Handle video uploads (file or RTSP URL) and return the source path for processing.
@@ -66,7 +66,7 @@ def upload_video():
 
     return jsonify({"error": "No video or RTSP URL provided"}), 400
 
-@app.route('/process_video/<filename>')
+@bp.route('/process_video/<filename>')
 def process_video(filename):
     """
     Process the uploaded video using the generate_annotated_frames function.
@@ -95,7 +95,7 @@ def process_video(filename):
         "logs_path": f"/{LOG_FILE_PATH}",
     })
 
-@app.route('/frame_stream/<path:stream_source>')
+@bp.route('/frame_stream/<path:stream_source>')
 def frame_stream(stream_source):
     rtsp = False
     if stream_source.startswith("rtsp://"):
@@ -117,7 +117,7 @@ def frame_stream(stream_source):
         mimetype='multipart/x-mixed-replace; boundary=frame',
     )
 
-@app.route('/logs', methods=['GET'])
+@bp.route('/logs', methods=['GET'])
 def fetch_logs():
     logs_dict = {"uploadLogs": {}, "streamLogs": {}}
     if os.path.exists(LOG_FILE_PATH):
@@ -135,7 +135,7 @@ def fetch_logs():
     })
 
 # NEW: Endpoint to save logs to MySQL database
-@app.route('/save_logs', methods=['POST'])
+@bp.route('/save_logs', methods=['POST'])
 def save_logs():
     data = request.get_json()
     if not data or 'logs' not in data:
@@ -226,7 +226,7 @@ def query_table_for_day(day_str):
     return results
 
 # Endpoint to provide dashboard data (last 7 days)
-@app.route('/dashboard_data', methods=['GET'])
+@bp.route('/dashboard_data', methods=['GET'])
 def dashboard_data():
     today = datetime.date.today()
     # Last 7 days (from 6 days ago until today)
@@ -258,7 +258,7 @@ def dashboard_data():
     return jsonify(data)
 
 # Endpoint to search for a license plate (search across last 7 days)
-@app.route('/search_license', methods=['GET'])
+@bp.route('/search_license', methods=['GET'])
 def search_license():
     query_str = request.args.get('query', '')
     # Remove spaces and tab characters, then uppercase
@@ -290,38 +290,8 @@ def search_license():
     conn.close()
     return jsonify(results)
 
-'''@app.route('/search_license', methods=['GET'])
-def search_license():
-    query_str = request.args.get('query', '')
-    query_normalized = query_str.replace(" ", "").upper()
-    today = datetime.date.today()
-    dates = [(today - datetime.timedelta(days=i)).strftime("%Y%m%d") for i in range(6, -1, -1)]
-    results = []
-    conn = mysql.connector.connect(
-         host="host.docker.internal",
-         user="root",
-         password="",
-         database="veh_logs"
-    )
-    cursor = conn.cursor(dictionary=True)
-    for d in dates:
-        table_name = f"veh_log_{d}"
-        sql = f"SELECT track_id, license, class_name, time FROM {table_name} WHERE REPLACE(license, ' ', '') LIKE %s"
-        like_pattern = "%" + query_normalized + "%"
-        try:
-            cursor.execute(sql, (like_pattern,))
-            rows = cursor.fetchall()
-            for row in rows:
-                row['date'] = d
-                results.append(row)
-        except mysql.connector.Error:
-            continue
-    cursor.close()
-    conn.close()
-    return jsonify(results)
-'''
 # Endpoint to search by time range (search across tables for days in range)
-@app.route('/search_time', methods=['GET'])
+@bp.route('/search_time', methods=['GET'])
 def search_time():
     start = request.args.get('start')
     end = request.args.get('end')
@@ -372,7 +342,7 @@ def search_time():
     return jsonify(results)
 
 # Endpoint to get over speeding vehicles (avg speed > 40 km/h) for the last 7 days
-@app.route('/dashboard_over_speed', methods=['GET'])
+@bp.route('/dashboard_over_speed', methods=['GET'])
 def dashboard_over_speed():
     today = datetime.date.today()
     # Last 7 days (from 6 days ago until today)
