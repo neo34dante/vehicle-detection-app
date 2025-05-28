@@ -1,0 +1,7 @@
+flask
+opencv-python
+numpy
+supervision
+ultralytics
+easyocr
+mysql-connector-python
