@@ -77,6 +77,17 @@ A Flask-based web application for real-time vehicle detection, classification, s
     - Main interface: `http://localhost:5000`
     - Dashboard: `http://localhost:5000/dashboard`
 
+## Docker
+
+Build the GPU-enabled Docker image and run it using the NVIDIA Container Toolkit:
+
+```bash
+docker build -t vehicle-detector .
+docker run --gpus all -p 5000:5000 vehicle-detector
+```
+
+Ensure the required YOLO model weights are copied to the paths mentioned above before launching the container.
+
 ## Contributing
 Pull requests are welcome. For major changes:
 1. Fork the repository
