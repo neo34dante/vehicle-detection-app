@@ -4,8 +4,9 @@ import cv2
 import json
 import time
 import datetime
-from wkg_with_sv import generate_annotated_frames, LOG_FILE_PATH, generate_annotated_frames_rtsp
-
+from wkg_with_sv import LOG_FILE_PATH
+from video_pipeline import generate_annotated_frames
+from rtsp_pipeline import generate_annotated_frames_rtsp
 # NEW: Import MySQL connector (ensure you have mysql-connector-python installed)
 import mysql.connector
 from mysql.connector import Error
