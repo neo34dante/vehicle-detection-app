@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>U Force e-TCP</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f4f8;
+    }
+    header {
+      background-color: #4caf50;
+      color: white;
+      padding: 20px 20px 20px 100px; /* leave space for dashboard button */
+      text-align: center;
+      font-size: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    /* Dashboard button style */
+    #dashboard-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background-color: #fff;
+      color: #4caf50;
+      border: none;
+      padding: 8px 12px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    .container {
+      width: 90%;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      color: #555;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 10px 10px 0 0;
+    }
+    .tab.active {
+      background-color: #4caf50;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .upload-section, .stream-section {
+      text-align: center;
+    }
+    .upload-section input, .stream-section input {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 50%;
+      font-size: 16px;
+    }
+    .upload-section button, .stream-section button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    .upload-section button:hover, .stream-section button:hover {
+      background-color: #45a049;
+    }
+    .video-container {
+      text-align: center;
+      margin: 20px auto;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 10px;
+      width: 1080px auto;
+      height: 720px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #ddd;
+    }
+    .log-section {
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    /* Thumbnail image styling */
+    .thumb {
+      height: 50px;
+      width: auto;
+    }
+    /* Save button styling */
+    .save-btn {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    /* Editable license cell style */
+    .editable-license {
+      background-color: #f9f9f9;
+    }
+    /* Edit Data toggle styling */
+    .toggle-container {
+      text-align: right;
+      margin-bottom: 10px;
+    }
+    .toggle-container label {
+      font-size: 14px;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <button id="dashboard-btn" onclick="location.href='/dashboard'">Go to Dashboard</button>
+    Speed Monitoring and Logging System
+  </header>
+  <div class="container">
+    <!-- Tab Navigation -->
+    <div class="tabs">
+      <div class="tab active" data-tab="upload-tab" onclick="showTab('upload-tab')">Upload Video</div>
+      <div class="tab" data-tab="stream-tab" onclick="showTab('stream-tab')">Use Stream</div>
+    </div>
+
+    <!-- Edit Data Toggle -->
+    <div class="toggle-container">
+      <input type="checkbox" id="edit-data-toggle" onchange="toggleEditData()">
+      <label for="edit-data-toggle">Edit Data</label>
+    </div>
+
+    <!-- Upload Video Tab -->
+    <div id="upload-tab" class="tab-content active">
+      <div class="upload-section">
+        <input type="file" id="video-upload" accept="video/*">
+        <button onclick="startVideoStream()">Start Process</button>
+      </div>
+      <div class="video-container" id="video-display">
+        <img id="video-stream" alt="Processing Stream" style="width: 100%; height: auto; object-fit: contain;">
+      </div>
+      <div class="log-section">
+        <h2>Detection Logs</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Track ID</th>
+              <th>Class Name</th>
+              <th>Avg Speed (Kmph)</th>
+              <th>License</th>
+              <th>Time</th>
+              <th>License Plate</th>
+              <th>Vehicle</th>
+            </tr>
+          </thead>
+          <tbody id="upload-log-table">
+            <!-- Logs will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RTSP Stream Tab -->
+    <div id="stream-tab" class="tab-content">
+      <div class="stream-section">
+        <input type="text" id="stream-url" placeholder="Enter RTSP Stream URL">
+        <button onclick="startStream()">Start Stream</button>
+      </div>
+      <div class="video-container" id="stream-display">
+        <img id="stream-video" alt="RTSP Stream" style="width: 100%; height: auto; object-fit: contain;">
+      </div>
+      <div class="log-section">
+        <h2>Detection Logs</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Track ID</th>
+              <th>Class Name</th>
+              <th>Avg Speed (Kmph)</th>
+              <th>License</th>
+              <th>Time</th>
+              <th>License Plate</th>
+              <th>Vehicle</th>
+            </tr>
+          </thead>
+          <tbody id="stream-log-table">
+            <!-- Logs will be populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Save to Database Button -->
+    <button class="save-btn" onclick="saveLogsToDatabase()">Save to database</button>
+  </div>
+
+  <script>
+    // Global variable to control auto refresh
+    let autoRefreshEnabled = true;
+
+    // Function to handle tab switching
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    // Function to start processing uploaded video
+    function startVideoStream() {
+      const fileInput = document.getElementById('video-upload');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please upload a video file.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('video', file);
+      fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(result => {
+        const videoPath = result.video_path;
+        if (!videoPath) {
+          alert('Error processing uploaded video.');
+          return;
+        }
+        document.getElementById('video-stream').src = `/frame_stream/${encodeURIComponent(videoPath)}`;
+        populateLogs(result.logs, 'upload-log-table');
+      })
+      .catch(error => { alert('Error processing video: ' + error.message); });
+    }
+
+    // Function to start RTSP stream
+    function startStream() {
+      const streamUrl = document.getElementById('stream-url').value.trim();
+      if (!streamUrl) {
+        alert('Please enter an RTSP URL.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('stream_url', streamUrl);
+      fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(result => {
+        const videoPath = result.video_path;
+        if (!videoPath) {
+          alert('Error processing RTSP stream.');
+          return;
+        }
+        document.getElementById('stream-video').src = `/frame_stream/${encodeURIComponent(videoPath)}`;
+        populateLogs(result.logs, 'stream-log-table');
+      })
+      .catch(error => { alert('Error processing stream: ' + error.message); });
+    }
+
+    function fetchAndPopulateLogs() {
+      fetch('/logs')
+      .then(response => response.json())
+      .then(logs => {
+        if (logs.uploadLogs) { populateLogs(logs.uploadLogs, 'upload-log-table'); }
+        if (logs.streamLogs) { populateLogs(logs.streamLogs, 'stream-log-table'); }
+      })
+      .catch(error => console.error('Error fetching logs:', error));
+    }
+
+    function populateLogs(logs, tableId) {
+      if (!logs || !Array.isArray(logs)) {
+        console.warn("No logs available to populate.");
+        return;
+      }
+      const logTable = document.getElementById(tableId);
+      logTable.innerHTML = ''; // Clear existing logs
+      logs.forEach(log => {
+        const trackId = log['Track ID'] || 'N/A';
+        const classId = log['Class ID'] || '';
+        const row = document.createElement('tr');
+        // Store class id as a data attribute for later saving
+        row.setAttribute('data-class-id', classId);
+        row.innerHTML = `
+          <td>${trackId}</td>
+          <td>${log['Class Name'] || 'Unknown'}</td>
+          <td>${log['Avg Speed'] || '0.00'} km/h</td>
+          <td contenteditable="true" class="editable-license">${log['License'] || 'N/A'}</td>
+          <td>${log['Time'] || 'N/A'}</td>
+          <td>
+            <a href="/static/{{ current_date }}/license/${trackId}.jpeg" target="_blank">
+              <img src="/static/{{ current_date }}/license/${trackId}.jpeg" class="thumb" alt="License Plate">
+            </a>
+          </td>
+          <td>
+            <a href="/static/{{ current_date }}/veh/${trackId}.jpeg" target="_blank">
+              <img src="/static/{{ current_date }}/veh/${trackId}.jpeg" class="thumb" alt="Vehicle">
+            </a>
+          </td>
+        `;
+        logTable.appendChild(row);
+      });
+    }
+
+    // Function to gather log data from both tables and send to server for saving
+    function saveLogsToDatabase() {
+      let logs = [];
+      function extractLogs(tableId) {
+        const rows = document.getElementById(tableId).querySelectorAll("tr");
+        rows.forEach(row => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length >= 7) {
+            let log = {
+              "Track ID": parseInt(cells[0].innerText.trim()),
+              "Class Name": cells[1].innerText.trim(),
+              "Avg Speed": cells[2].innerText.trim().replace(" km/h", ""),
+              "License": cells[3].innerText.trim(),
+              "Time": cells[4].innerText.trim(),
+              "Class ID": row.getAttribute("data-class-id")
+            };
+            logs.push(log);
+          }
+        });
+      }
+      extractLogs("upload-log-table");
+      extractLogs("stream-log-table");
+      
+      fetch('/save_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: logs })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.status === "success") {
+          alert("Logs saved successfully!");
+        } else {
+          alert("Error saving logs: " + data.error);
+        }
+      })
+      .catch(err => { alert("Error: " + err); });
+    }
+
+    // Toggle auto-refresh based on Edit Data checkbox
+    function toggleEditData() {
+      const checkbox = document.getElementById("edit-data-toggle");
+      // When checked, disable auto refresh so that edits aren't overwritten.
+      autoRefreshEnabled = !checkbox.checked;
+      console.log("Auto refresh enabled:", autoRefreshEnabled);
+    }
+
+    // Periodically refresh logs only if auto refresh is enabled
+    setInterval(() => {
+      if (autoRefreshEnabled) {
+        fetchAndPopulateLogs();
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
+<!-- End of HTML document -->
+<!-- This HTML document is designed to be used with a Flask backend. 
+     Ensure that the Flask app serves the necessary endpoints for video upload, RTSP stream, and log retrieval. -->

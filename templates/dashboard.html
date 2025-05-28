@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Analysis Reports</title>
+  <!-- Tailwind & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <!-- Header -->
+  <header class="flex items-center justify-between p-4 bg-green-600 dark:bg-green-700 text-white shadow sticky top-0 z-50">
+    <h1 class="text-xl font-semibold">Traffic Analysis Reports</h1>
+    <a href="/" class="px-3 py-1 bg-white text-green-600 rounded hover:bg-gray-200 transition">Detections</a>
+  </header>
+
+  <main class="max-w-screen-xl mx-auto p-6 space-y-8">
+    <!-- Charts Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Daily Volume (Last 7 Days)</h2>
+        <canvas id="volumeChart"></canvas>
+      </div>
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Average Speed Comparison</h2>
+        <canvas id="speedChart"></canvas>
+      </div>
+    </section>
+
+    <!-- License Search -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">License Plate Search</h2>
+      <div class="relative">
+        <input type="text" id="license-search" placeholder="e.g., DL6CT7127"
+               class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
+      </div>
+      <button onclick="searchLicense()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Search</button>
+      <div id="license-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+
+    <!-- Time Range Search -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">Search by Date &amp; Time</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="datetime-local" id="start-datetime" class="px-4 py-2 border rounded focus:ring focus:border-green-300">
+        <input type="datetime-local" id="end-datetime" class="px-4 py-2 border rounded focus:ring focus:border-green-300">
+      </div>
+      <button onclick="searchTime()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Filter</button>
+      <div id="time-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+
+    <!-- Over Speeding -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">Over Speeding Vehicles</h2>
+      <button onclick="loadOverSpeed()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Load Data</button>
+      <div id="over-speed-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+  </main>
+
+  <!-- Scripts (unchanged data-fetch & chart setup) -->
+  <script>
+    // Global variables to hold chart instances
+    let volumeChart, speedChart;
+
+    // Fetch dashboard data from the backend and render charts
+    function loadDashboardData() {
+      fetch('/dashboard_data')
+        .then(response => response.json())
+        .then(data => {
+          const dates = data.dates;
+          // For bar chart:
+          // Total volumes per day for each class
+          const milTotal = dates.map(d => data.volumes[d]["Mil Veh"] || 0);
+          const civilTotal = dates.map(d => data.volumes[d]["Civil Veh"] || 0);
+          // Overspeeding counts per day for each class
+          const milOverspeed = dates.map(d => data.over_speed_volumes[d]["Mil Veh"] || 0);
+          const civilOverspeed = dates.map(d => data.over_speed_volumes[d]["Civil Veh"] || 0);
+          // Calculate "normal" counts (not overspeeding)
+          const milNormal = milTotal.map((total, i) => total - milOverspeed[i]);
+          const civilNormal = civilTotal.map((total, i) => total - civilOverspeed[i]);
+
+          // Render grouped & stacked bar chart for volumes
+          const ctxVolume = document.getElementById('volumeChart').getContext('2d');
+          if (volumeChart) volumeChart.destroy();
+          volumeChart = new Chart(ctxVolume, {
+            type: 'bar',
+            data: {
+              labels: dates,
+              datasets: [
+                { 
+                  label: 'Mil Veh Normal', 
+                  data: milNormal, 
+                  backgroundColor: '#64b5f6',
+                  stack: 'Mil' 
+                },
+                { 
+                  label: 'Mil Veh Overspeed', 
+                  data: milOverspeed, 
+                  backgroundColor: '#1976d2',
+                  stack: 'Mil' 
+                },
+                { 
+                  label: 'Civil Veh Normal', 
+                  data: civilNormal, 
+                  backgroundColor: '#ffb74d',
+                  stack: 'Civil' 
+                },
+                { 
+                  label: 'Civil Veh Overspeed', 
+                  data: civilOverspeed, 
+                  backgroundColor: '#f57c00',
+                  stack: 'Civil' 
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              aspectRatio: 2,
+              scales: {
+                x: { 
+                  stacked: true 
+                },
+                y: {
+                  stacked: true,
+                  ticks: {
+                    stepSize: 10
+                  },
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+
+          // For line chart: Average speeds per day
+          const milSpeeds = dates.map(d => data.avg_speeds[d]["Mil Veh"] || 0);
+          const civilSpeeds = dates.map(d => data.avg_speeds[d]["Civil Veh"] || 0);
+          const ctxSpeed = document.getElementById('speedChart').getContext('2d');
+          if (speedChart) speedChart.destroy();
+          speedChart = new Chart(ctxSpeed, {
+            type: 'line',
+            data: {
+              labels: dates,
+              datasets: [
+                { label: 'Mil Veh Avg Speed', data: milSpeeds, borderColor: '#2196F3', fill: false },
+                { label: 'Civil Veh Avg Speed', data: civilSpeeds, borderColor: '#FF9800', fill: false }
+              ]
+            },
+            options: {
+              responsive: true,
+              aspectRatio: 2,
+              scales: {
+                y: {
+                  ticks: { stepSize: 10 },
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+        })
+        .catch(err => console.error("Error loading dashboard data:", err));
+    }
+
+    // License plate search
+    function searchLicense() {
+      const query = document.getElementById('license-search').value.trim();
+      if (!query) {
+        alert("Please enter a license plate to search.");
+        return;
+      }
+      fetch(`/search_license?query=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(results => {
+          let html = "";
+          if (results.length === 0) {
+            html = "<p>No matching records found.</p>";
+          } else {
+            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Time</th><th>Images</th></tr></thead><tbody>";
+            results.forEach(r => {
+              html += `<tr>
+                <td>${r.date}</td>
+                <td>${r.track_id}</td>
+                <td>${r.license}</td>
+                <td>${r.class_name}</td>
+                <td>${r.time}</td>
+                <td>
+                  <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
+                  </a>
+                  <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
+                  </a>
+                </td>
+              </tr>`;
+            });
+            html += "</tbody></table>";
+          }
+          document.getElementById('license-results').innerHTML = html;
+        })
+        .catch(err => console.error("Error searching license:", err));
+    }
+
+    // Time range search
+    function searchTime() {
+      const start = document.getElementById('start-datetime').value;
+      const end = document.getElementById('end-datetime').value;
+      if (!start || !end) {
+        alert("Please provide both start and end date & time.");
+        return;
+      }
+      fetch(`/search_time?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`)
+        .then(response => response.json())
+        .then(results => {
+          let html = "";
+          if (results.length === 0) {
+            html = "<p>No records found in the specified time range.</p>";
+          } else {
+            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Images</th></tr></thead><tbody>";
+            results.forEach(r => {
+              html += `<tr>
+                <td>${r.date}</td>
+                <td>${r.track_id}</td>
+                <td>${r.license}</td>
+                <td>${r.class_name}</td>
+                <td>${r.avg_speed}</td>
+                <td>${r.time}</td>
+                <td>
+                  <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
+                  </a>
+                  <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
+                  </a>
+                </td>
+              </tr>`;
+            });
+            html += "</tbody></table>";
+          }
+          document.getElementById('time-results').innerHTML = html;
+        })
+        .catch(err => console.error("Error in time search:", err));
+    }
+
+    // Function to load over speeding vehicles data
+    function loadOverSpeed() {
+      fetch('/dashboard_over_speed')
+        .then(response => response.json())
+        .then(results => {
+          let html = "";
+          if (results.length === 0) {
+            html = "<p>No over speeding records found.</p>";
+          } else {
+            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Images</th></tr></thead><tbody>";
+            results.forEach(r => {
+              html += `<tr>
+                <td>${r.date}</td>
+                <td>${r.track_id}</td>
+                <td>${r.license}</td>
+                <td>${r.class_name}</td>
+                <td>${r.avg_speed}</td>
+                <td>${r.time}</td>
+                <td>
+                  <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
+                  </a>
+                  <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
+                    <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
+                  </a>
+                </td>
+              </tr>`;
+            });
+            html += "</tbody></table>";
+          }
+          document.getElementById('over-speed-results').innerHTML = html;
+        })
+        .catch(err => console.error("Error loading over speeding data:", err));
+    }
+
+
+    // Load dashboard data on page load
+    window.onload = loadDashboardData;
+  </script>
+
+</body>
+</html>

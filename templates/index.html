@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speed Monitoring & Logging</title>
+  <!-- Tailwind Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Enable dark mode based on user system preference
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <!-- Header -->
+  <header class="flex items-center justify-between p-4 bg-green-600 dark:bg-green-700 text-white shadow sticky top-0 z-50">
+    <h1 class="text-xl font-semibold">Speed Monitoring & Logging</h1>
+    <a href="/dashboard" class="px-3 py-1 bg-white text-green-600 rounded hover:bg-gray-200 transition">Dashboard</a>
+  </header>
+
+  <main class="max-w-screen-xl mx-auto p-6 space-y-6">
+    <!-- Tabs -->
+    <div class="bg-white dark:bg-gray-800 rounded shadow">
+      <div class="flex border-b border-gray-200 dark:border-gray-700">
+        <button id="tab-upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>
+        <button id="tab-stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300" onclick="showTab('stream')">Stream</button>
+      </div>
+      <!-- Upload Content -->
+      <div id="upload" class="p-6">
+        <div class="flex flex-col items-center gap-4">
+          <input type="file" id="video-upload" accept="video/*" class="block w-full md:w-1/2 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
+          <button onclick="startVideoStream()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Start Process</button>
+        </div>
+        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-64 flex items-center justify-center">
+          <video id="video-stream" class="w-full h-full object-contain" autoplay muted playsinline></video>
+        </div>
+        <div class="mt-6">
+          <h2 class="text-lg font-semibold mb-2">Detection Logs</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Track ID</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Class</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Speed (km/h)</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">License</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Time</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Images</th>
+                </tr>
+              </thead>
+              <tbody id="upload-log-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- Stream Content -->
+      <div id="stream" class="hidden p-6">
+        <div class="flex flex-col items-center gap-4">
+          <input type="text" id="stream-url" placeholder="rtsp://..." class="block w-full md:w-1/2 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
+          <button onclick="startStream()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Start Stream</button>
+        </div>
+        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-64 flex items-center justify-center">
+          <video id="stream-video" class="w-full h-full object-contain" autoplay muted playsinline></video>
+        </div>
+        <div class="mt-6">
+          <h2 class="text-lg font-semibold mb-2">Detection Logs</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
+              <thead class="bg-gray-100 dark:bg-gray-800">
+                <tr>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Track ID</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Class</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Speed (km/h)</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">License</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Time</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Images</th>
+                </tr>
+              </thead>
+              <tbody id="stream-log-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Save to Database -->
+    <div class="text-center">
+      <button onclick="saveLogsToDatabase()" class="px-8 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Save Logs to DB</button>
+    </div>
+  </main>
+
+  <!-- Scripts (unchanged) -->
+  <script>
+    /* Tab switching */
+    function showTab(id) {
+      document.getElementById('upload').classList.add('hidden');
+      document.getElementById('stream').classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+      document.getElementById(id + '-btn').classList.add('border-green-600','dark:border-green-400','text-green-600','dark:text-green-400');
+      ['upload','stream'].filter(t => t!==id).forEach(t=>{
+        document.getElementById(t + '-btn').classList.remove('border-green-600','dark:border-green-400','text-green-600','dark:text-green-400');
+      });
+    }
+    /* Existing JS functions (startVideoStream, startStream, fetchAndPopulateLogs, etc.) remain here */
+    // Global variable to control auto refresh
+    let autoRefreshEnabled = true;
+
+    // Function to handle tab switching
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    // Function to start processing uploaded video
+    function startVideoStream() {
+      const fileInput = document.getElementById('video-upload');
+      const file = fileInput.files[0];
+      if (!file) {
+        alert('Please upload a video file.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('video', file);
+      fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(result => {
+        const videoPath = result.video_path;
+        if (!videoPath) {
+          alert('Error processing uploaded video.');
+          return;
+        }
+        document.getElementById('video-stream').src = `/frame_stream/${encodeURIComponent(videoPath)}`;
+        populateLogs(result.logs, 'upload-log-table');
+      })
+      .catch(error => { alert('Error processing video: ' + error.message); });
+    }
+
+    // Function to start RTSP stream
+    function startStream() {
+      const streamUrl = document.getElementById('stream-url').value.trim();
+      if (!streamUrl) {
+        alert('Please enter an RTSP URL.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('stream_url', streamUrl);
+      fetch('/upload', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(result => {
+        const videoPath = result.video_path;
+        if (!videoPath) {
+          alert('Error processing RTSP stream.');
+          return;
+        }
+        document.getElementById('stream-video').src = `/frame_stream/${encodeURIComponent(videoPath)}`;
+        populateLogs(result.logs, 'stream-log-table');
+      })
+      .catch(error => { alert('Error processing stream: ' + error.message); });
+    }
+
+    function fetchAndPopulateLogs() {
+      fetch('/logs')
+      .then(response => response.json())
+      .then(logs => {
+        if (logs.uploadLogs) { populateLogs(logs.uploadLogs, 'upload-log-table'); }
+        if (logs.streamLogs) { populateLogs(logs.streamLogs, 'stream-log-table'); }
+      })
+      .catch(error => console.error('Error fetching logs:', error));
+    }
+
+    function populateLogs(logs, tableId) {
+      if (!logs || !Array.isArray(logs)) {
+        console.warn("No logs available to populate.");
+        return;
+      }
+      const logTable = document.getElementById(tableId);
+      logTable.innerHTML = ''; // Clear existing logs
+      logs.forEach(log => {
+        const trackId = log['Track ID'] || 'N/A';
+        const classId = log['Class ID'] || '';
+        const row = document.createElement('tr');
+        // Store class id as a data attribute for later saving
+        row.setAttribute('data-class-id', classId);
+        row.innerHTML = `
+          <td>${trackId}</td>
+          <td>${log['Class Name'] || 'Unknown'}</td>
+          <td>${log['Avg Speed'] || '0.00'} km/h</td>
+          <td contenteditable="true" class="editable-license">${log['License'] || 'N/A'}</td>
+          <td>${log['Time'] || 'N/A'}</td>
+          <td>
+            <a href="/static/{{ current_date }}/license/${trackId}.jpeg" target="_blank">
+              <img src="/static/{{ current_date }}/license/${trackId}.jpeg" class="thumb" alt="License Plate">
+            </a>
+          </td>
+          <td>
+            <a href="/static/{{ current_date }}/veh/${trackId}.jpeg" target="_blank">
+              <img src="/static/{{ current_date }}/veh/${trackId}.jpeg" class="thumb" alt="Vehicle">
+            </a>
+          </td>
+        `;
+        logTable.appendChild(row);
+      });
+    }
+
+    // Function to gather log data from both tables and send to server for saving
+    function saveLogsToDatabase() {
+      let logs = [];
+      function extractLogs(tableId) {
+        const rows = document.getElementById(tableId).querySelectorAll("tr");
+        rows.forEach(row => {
+          const cells = row.querySelectorAll("td");
+          if (cells.length >= 7) {
+            let log = {
+              "Track ID": parseInt(cells[0].innerText.trim()),
+              "Class Name": cells[1].innerText.trim(),
+              "Avg Speed": cells[2].innerText.trim().replace(" km/h", ""),
+              "License": cells[3].innerText.trim(),
+              "Time": cells[4].innerText.trim(),
+              "Class ID": row.getAttribute("data-class-id")
+            };
+            logs.push(log);
+          }
+        });
+      }
+      extractLogs("upload-log-table");
+      extractLogs("stream-log-table");
+      
+      fetch('/save_logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs: logs })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if(data.status === "success") {
+          alert("Logs saved successfully!");
+        } else {
+          alert("Error saving logs: " + data.error);
+        }
+      })
+      .catch(err => { alert("Error: " + err); });
+    }
+
+    // Toggle auto-refresh based on Edit Data checkbox
+    function toggleEditData() {
+      const checkbox = document.getElementById("edit-data-toggle");
+      // When checked, disable auto refresh so that edits aren't overwritten.
+      autoRefreshEnabled = !checkbox.checked;
+      console.log("Auto refresh enabled:", autoRefreshEnabled);
+    }
+
+    // Periodically refresh logs only if auto refresh is enabled
+    setInterval(() => {
+      if (autoRefreshEnabled) {
+        fetchAndPopulateLogs();
+      }
+    }, 5000);
+</script>
+</body>
+</html>
