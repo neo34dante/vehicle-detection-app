@@ -31,13 +31,7 @@ echo "Remember to create the 'veh_logs' database before running the app:"
 echo "    sudo mysql -u root"
 echo "    CREATE DATABASE veh_logs;"
 echo "    exit;"
-
-
-# Step 5: Reminder about YOLO model weights
-echo "[4/5] Please make sure your YOLO model weights are present at the following paths:"
-echo "    - Vehicle classification: /workspace/data/runs/results/veh_cls/weights/best.pt"
-echo "    - License detection: runs/detect/license3/weights/best.pt"
-echo "    (Copy your trained models to these locations if not already done.)"
+echo "MySQL server is now running."
 
 # Step 6: Final notes and how to run
 echo "[5/5] Setup complete!"
