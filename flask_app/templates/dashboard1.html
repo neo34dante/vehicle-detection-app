@@ -12,6 +12,13 @@
       document.documentElement.classList.add('dark');
     }
   </script>
+  <style>
+    .thumb {
+      width: 80px;
+      height: auto;
+      object-fit: cover;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
   <!-- Header -->
@@ -179,8 +186,8 @@
           if (results.length === 0) {
             html = "<p>No matching records found.</p>";
           } else {
-            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Time</th><th>Images</th></tr></thead><tbody>";
-            results.forEach(r => {
+              html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Time</th><th>Detected Plate</th><th>Detected Veh</th></tr></thead><tbody>";
+              results.forEach(r => {
               html += `<tr>
                 <td>${r.date}</td>
                 <td>${r.track_id}</td>
@@ -191,6 +198,8 @@
                   <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
                     <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
                   </a>
+                </td>
+                <td>
                   <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
                     <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
                   </a>
@@ -219,7 +228,7 @@
           if (results.length === 0) {
             html = "<p>No records found in the specified time range.</p>";
           } else {
-            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Images</th></tr></thead><tbody>";
+            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Detected Plate</th><th>Detected Veh</th></tr></thead><tbody>";
             results.forEach(r => {
               html += `<tr>
                 <td>${r.date}</td>
@@ -227,15 +236,17 @@
                 <td>${r.license}</td>
                 <td>${r.class_name}</td>
                 <td>${r.avg_speed}</td>
-                <td>${r.time}</td>
-                <td>
-                  <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
-                    <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
-                  </a>
-                  <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
-                    <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
-                  </a>
-                </td>
+                  <td>${r.time}</td>
+                  <td>
+                    <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
+                      <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
+                    </a>
+                  </td>
+                  <td>
+                    <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
+                      <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
+                    </a>
+                  </td>
               </tr>`;
             });
             html += "</tbody></table>";
@@ -254,7 +265,7 @@
           if (results.length === 0) {
             html = "<p>No over speeding records found.</p>";
           } else {
-            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Images</th></tr></thead><tbody>";
+            html += "<table><thead><tr><th>Date</th><th>Track ID</th><th>License</th><th>Class</th><th>Avg Speed</th><th>Time</th><th>Detected Plate</th><th>Detected Veh</th></tr></thead><tbody>";
             results.forEach(r => {
               html += `<tr>
                 <td>${r.date}</td>
@@ -262,15 +273,17 @@
                 <td>${r.license}</td>
                 <td>${r.class_name}</td>
                 <td>${r.avg_speed}</td>
-                <td>${r.time}</td>
-                <td>
-                  <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
-                    <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
-                  </a>
-                  <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
-                    <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
-                  </a>
-                </td>
+                  <td>${r.time}</td>
+                  <td>
+                    <a href="/static/${r.date}/license/${r.track_id}.jpeg" target="_blank">
+                      <img src="/static/${r.date}/license/${r.track_id}.jpeg" class="thumb" alt="License">
+                    </a>
+                  </td>
+                  <td>
+                    <a href="/static/${r.date}/veh/${r.track_id}.jpeg" target="_blank">
+                      <img src="/static/${r.date}/veh/${r.track_id}.jpeg" class="thumb" alt="Vehicle">
+                    </a>
+                  </td>
               </tr>`;
             });
             html += "</tbody></table>";

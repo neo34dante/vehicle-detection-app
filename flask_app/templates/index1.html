@@ -12,6 +12,20 @@
       document.documentElement.classList.add('dark');
     }
   </script>
+  <style>
+    .thumb {
+      width: 80px;
+      height: auto;
+      object-fit: cover;
+    }
+    .editable-license:focus {
+      outline: none;
+    }
+    .dark .editable-license {
+      background-color: #374151;
+      color: #f9fafb;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
   <!-- Header -->
@@ -26,14 +40,18 @@
         <button id="tab-upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>
         <button id="tab-stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300" onclick="showTab('stream')">Stream</button>
       </div>
+      <div class="flex justify-end p-2">
+        <input type="checkbox" id="edit-data-toggle" class="mr-2" onchange="toggleEditData()">
+        <label for="edit-data-toggle" class="text-sm">Edit Data</label>
+      </div>
       <!-- Upload Content -->
       <div id="upload" class="p-6">
         <div class="flex flex-col items-center gap-4">
           <input type="file" id="video-upload" accept="video/*" class="block w-full md:w-1/2 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
           <button onclick="startVideoStream()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Start Process</button>
         </div>
-        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-64 flex items-center justify-center">
-          <video id="video-stream" class="w-full h-full object-contain" autoplay muted playsinline></video>
+        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-96 flex items-center justify-center">
+          <img id="video-stream" class="w-full h-full object-contain" alt="Processed Video Stream">
         </div>
         <div class="mt-6">
           <h2 class="text-lg font-semibold mb-2">Detection Logs</h2>
@@ -46,7 +64,8 @@
                   <th class="px-4 py-2 text-left text-sm font-medium">Speed (km/h)</th>
                   <th class="px-4 py-2 text-left text-sm font-medium">License</th>
                   <th class="px-4 py-2 text-left text-sm font-medium">Time</th>
-                  <th class="px-4 py-2 text-left text-sm font-medium">Images</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Detected Plate</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Detected Veh</th>
                 </tr>
               </thead>
               <tbody id="upload-log-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
@@ -60,8 +79,8 @@
           <input type="text" id="stream-url" placeholder="rtsp://..." class="block w-full md:w-1/2 px-3 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
           <button onclick="startStream()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Start Stream</button>
         </div>
-        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-64 flex items-center justify-center">
-          <video id="stream-video" class="w-full h-full object-contain" autoplay muted playsinline></video>
+        <div class="mt-6 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 h-96 flex items-center justify-center">
+          <img id="stream-video" class="w-full h-full object-contain" alt="RTSP Stream">
         </div>
         <div class="mt-6">
           <h2 class="text-lg font-semibold mb-2">Detection Logs</h2>
@@ -74,7 +93,8 @@
                   <th class="px-4 py-2 text-left text-sm font-medium">Speed (km/h)</th>
                   <th class="px-4 py-2 text-left text-sm font-medium">License</th>
                   <th class="px-4 py-2 text-left text-sm font-medium">Time</th>
-                  <th class="px-4 py-2 text-left text-sm font-medium">Images</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Detected Plate</th>
+                  <th class="px-4 py-2 text-left text-sm font-medium">Detected Veh</th>
                 </tr>
               </thead>
               <tbody id="stream-log-table" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"></tbody>
@@ -88,7 +108,7 @@
       <button onclick="saveLogsToDatabase()" class="px-8 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Save Logs to DB</button>    
     </div>
    </main>  
-  <!-- Scripts (unchanged) -->
+  <!-- Scripts -->
   <script>
     /* Tab switching */
     function showTab(id) {
@@ -100,18 +120,9 @@
         document.getElementById(t + '-btn').classList.remove('border-green-600','dark:border-green-400','text-green-600','dark:text-green-400');
       });
     }
-    /* Existing JS functions (startVideoStream, startStream, fetchAndPopulateLogs, etc.) remain here */
+
     // Global variable to control auto refresh
     let autoRefreshEnabled = true;
-
-    // Function to handle tab switching
-    function showTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
-    }
-
     // Function to start processing uploaded video
     function startVideoStream() {
       const fileInput = document.getElementById('video-upload');
