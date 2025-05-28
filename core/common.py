@@ -6,10 +6,6 @@ import re
 import numpy as np
 from collections import Counter
 
-################################################################################
-# Hard-coded configuration
-################################################################################
-
 # Generate a new log file path dynamically
 current_date = datetime.datetime.now().strftime("%Y%m%d")  # Format: YYYYMMDD
 is_file_processing = False
@@ -201,7 +197,6 @@ logs_dict = {}
 ################################################################################
 # Perspective Transformation (ViewTransformer)
 ################################################################################
-
 class ViewTransformer:
     """
     Applies a homography (perspective) transform from a 'source' quadrilateral
