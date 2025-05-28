@@ -25,7 +25,6 @@ pip install flask opencv-python numpy supervision ultralytics easyocr mysql-conn
 # Step 4: (Optional) Install MySQL server for local use
 echo "[4/5] Installing MySQL server (optional)..."
 sudo apt install -y mysql-server
-sudo service mysql start
 echo "MySQL server installed. You may need to run 'sudo mysql_secure_installation' for security."
 echo "Remember to create the 'veh_logs' database before running the app:"
 echo "    sudo mysql -u root"
