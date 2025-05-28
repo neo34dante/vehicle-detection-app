@@ -37,8 +37,8 @@
     <!-- Tabs -->
     <div class="bg-white dark:bg-gray-800 rounded shadow">
       <div class="flex border-b border-gray-200 dark:border-gray-700">
-        <button id="tab-upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>
-        <button id="tab-stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300" onclick="showTab('stream')">Stream</button>
+        <button id="tab-upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>␊
+        <button id="tab-stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300 border-b-2 border-transparent" onclick="showTab('stream')">Stream</button>
       </div>
       <div class="flex justify-end p-2">
         <input type="checkbox" id="edit-data-toggle" class="mr-2" onchange="toggleEditData()">
@@ -112,15 +112,21 @@
   <script>
     /* Tab switching */
     function showTab(id) {
-      document.getElementById('upload').classList.add('hidden');
-      document.getElementById('stream').classList.add('hidden');
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById(id + '-btn').classList.add('border-green-600','dark:border-green-400','text-green-600','dark:text-green-400');
-      ['upload','stream'].filter(t => t!==id).forEach(t=>{
-        document.getElementById(t + '-btn').classList.remove('border-green-600','dark:border-green-400','text-green-600','dark:text-green-400');
+      const tabs = ['upload', 'stream'];
+      // Hide all sections and reset button styles
+      tabs.forEach(t => {
+        document.getElementById(t).classList.add('hidden');
+        const btn = document.getElementById(t + '-btn');
+        btn.classList.remove('border-green-600', 'dark:border-green-400', 'text-green-600', 'dark:text-green-400');
+        btn.classList.add('border-transparent');
       });
+      // Show the selected tab
+      document.getElementById(id).classList.remove('hidden');
+      const activeBtn = document.getElementById(id + '-btn');
+      activeBtn.classList.remove('border-transparent');
+      activeBtn.classList.add('border-green-600', 'dark:border-green-400', 'text-green-600', 'dark:text-green-400');
     }
-
+    
     // Global variable to control auto refresh
     let autoRefreshEnabled = true;
     // Function to start processing uploaded video
@@ -273,6 +279,9 @@
         fetchAndPopulateLogs();
       }
     }, 5000);
+
+    // Normalize tabs on initial load
+    showTab('upload');
   </script>
 </body>
 </html>
