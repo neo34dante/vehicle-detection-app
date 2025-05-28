@@ -1,0 +1,20 @@
+{
+    "uploadLogs": {
+        "1": {
+            "Track ID": 1,
+            "Class Name": "Mil Veh",
+            "Avg Speed": "25.20",
+            "License": "T23P036602E",
+            "Time": "2025-05-20 07:35:14",
+            "Class ID": 0
+        },
+        "2": {
+            "Track ID": 2,
+            "Class Name": "Civil Veh",
+            "Avg Speed": "32.40",
+            "License": "K4852",
+            "Time": "2025-05-20 07:35:25",
+            "Class ID": 1
+        }
+    }
+}

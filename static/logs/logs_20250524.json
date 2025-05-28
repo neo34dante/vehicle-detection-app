@@ -1,0 +1,36 @@
+{
+    "uploadLogs": {
+        "1": {
+            "Track ID": 1,
+            "Class Name": "Mil Veh",
+            "Avg Speed": "25.20",
+            "License": "T23P036602E",
+            "Time": "2025-05-24 16:15:02",
+            "Class ID": 0
+        },
+        "2": {
+            "Track ID": 2,
+            "Class Name": "Civil Veh",
+            "Avg Speed": "32.40",
+            "License": "K4852",
+            "Time": "2025-05-24 16:15:13",
+            "Class ID": 1
+        },
+        "3": {
+            "Track ID": 3,
+            "Class Name": "Mil Veh",
+            "Avg Speed": "25.20",
+            "License": "1200209730Y",
+            "Time": "2025-05-24 16:16:09",
+            "Class ID": 0
+        },
+        "4": {
+            "Track ID": 4,
+            "Class Name": "Mil Veh",
+            "Avg Speed": "25.20",
+            "License": "[02P022739A'",
+            "Time": "2025-05-24 16:16:13",
+            "Class ID": 0
+        }
+    }
+}
