@@ -1,172 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traffic Analysis Reports</title>
-  <!-- Include Chart.js from CDN -->
+  <!-- Tailwind & Chart.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f4f8;
+    <script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
     }
-    header {
-      background-color: #4caf50;
-      color: white;
-      padding: 20px 20px 20px 200px; /* leave space for button */
-      text-align: center;
-      font-size: 28px;
-      position: relative;
-    }
-    /* Go to Detections button style */
-    #detections-btn {
-      position: absolute;
-      left: 20px;
-      top: 20px;
-      background-color: #fff;
-      color: #4caf50;
-      border: none;
-      padding: 10px 16px;
-      cursor: pointer;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    .container {
-      width: 90%;
-      margin: 20px auto;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    .col-half {
-      flex: 1 1 45%;
-      min-width: 300px;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .full-width {
-      width: 100%;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-bottom: 30px;
-    }
-    h2 {
-      margin-top: 0;
-      color: #333;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    input[type="text"], input[type="datetime-local"] {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    button {
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      padding: 8px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #f4f4f4;
-    }
-    .thumb {
-      height: 50px;
-      width: auto;
-      cursor: pointer;
-    }
-    /* Limit canvas size */
-    canvas {
-      max-height: 300px;
-      width: 100% !important;
-      display: block;
-    }
-  </style>
+  </script>
 </head>
-<body>
-  <header>
-    <button id="detections-btn" onclick="location.href='/'">Go to Detections</button>
-    Traffic Analysis Reports
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100">
+  <!-- Header -->
+  <header class="flex items-center justify-between p-4 bg-green-600 dark:bg-green-700 text-white shadow sticky top-0 z-50">
+    <h1 class="text-xl font-semibold">Traffic Analysis Reports</h1>
+    <a href="/" class="px-3 py-1 bg-white text-green-600 rounded hover:bg-gray-200 transition">Detections</a>
   </header>
-  <div class="container">
-    <div class="row">
-      <!-- Left Column: Stacked Bar Graph for daily volume with overspeeding -->
-      <div class="col-half">
-        <h2>Daily Volume (Last 7 Days)</h2>
+
+  <main class="max-w-screen-xl mx-auto p-6 space-y-8">
+    <!-- Charts Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Daily Volume (Last 7 Days)</h2>
         <canvas id="volumeChart"></canvas>
       </div>
-      <!-- Right Column: License Plate Search -->
-      <div class="col-half">
-        <h2>License Plate Search</h2>
-        <div class="form-group">
-          <label for="license-search">Enter License Plate:</label>
-          <input type="text" id="license-search" placeholder="e.g., DL 6 CT 7127">
-        </div>
-        <button onclick="searchLicense()">Search</button>
-        <div id="license-results" style="margin-top:15px;"></div>
+      <div class="bg-white dark:bg-gray-800 p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Average Speed Comparison</h2>
+        <canvas id="speedChart"></canvas>
       </div>
     </div>
-    <!-- Line Graph: Average Speed Comparison -->
-    <div class="full-width">
-      <h2>Average Speed Comparison (Last 7 Days)</h2>
-      <canvas id="speedChart"></canvas>
-    </div>
-    <!-- Time Range Search -->
-    <div class="full-width">
-      <h2>Search by Date & Time</h2>
-      <div class="form-group">
-        <label for="start-datetime">Start Date & Time:</label>
-        <input type="datetime-local" id="start-datetime">
-      </div>
-      <div class="form-group">
-        <label for="end-datetime">End Date & Time:</label>
-        <input type="datetime-local" id="end-datetime">
-      </div>
-      <button onclick="searchTime()">Search</button>
-      <div id="time-results" style="margin-top:15px; max-height:400px; overflow-y:auto;"></div>
-    </div>
-    <!-- Over Speeding Vehicles Section -->
-    <div class="full-width">
-      <h2>Over Speeding Vehicles (Last 7 Days)</h2>
-      <button onclick="loadOverSpeed()">Load Over Speeding Data</button>
-      <div id="over-speed-results" style="margin-top:15px; max-height:400px; overflow-y:auto;"></div>
-    </div>
-  </div>
+    </section>
 
+    <!-- License Search -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">License Plate Search</h2>
+      <div class="relative">
+        <input type="text" id="license-search" placeholder="e.g., DL6CT7127"
+               class="w-full px-4 py-2 border rounded focus:outline-none focus:ring focus:border-green-300">
+      </div>
+      <button onclick="searchLicense()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Search</button>
+      <div id="license-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+
+    <!-- Time Range Search -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">Search by Date &amp; Time</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input type="datetime-local" id="start-datetime" class="px-4 py-2 border rounded focus:ring focus:border-green-300">
+        <input type="datetime-local" id="end-datetime" class="px-4 py-2 border rounded focus:ring focus:border-green-300">
+      </div>
+      <button onclick="searchTime()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Filter</button>
+      <div id="time-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+
+    <!-- Over Speeding -->
+    <section class="bg-white dark:bg-gray-800 p-6 rounded shadow space-y-4">
+      <h2 class="text-lg font-semibold">Over Speeding Vehicles</h2>
+      <button onclick="loadOverSpeed()" class="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Load Data</button>
+      <div id="over-speed-results" class="overflow-y-auto max-h-64"></div>
+    </section>
+  </main>
   <script>
     // Global variables to hold chart instances
     let volumeChart, speedChart;
@@ -391,5 +287,3 @@
 </body>
 </html>
 <!-- End of dashboard.html -->
-<!-- This template is designed to be used with a Flask backend. 
-     Ensure that the backend serves the required data in the expected format. -->
