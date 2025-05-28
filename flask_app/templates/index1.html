@@ -1,5 +1,6 @@
+<!-- Source: original file fileciteturn0file0 -->
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,8 +38,8 @@
     <!-- Tabs -->
     <div class="bg-white dark:bg-gray-800 rounded shadow">
       <div class="flex border-b border-gray-200 dark:border-gray-700">
-        <button id="tab-upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>␊
-        <button id="tab-stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300 border-b-2 border-transparent" onclick="showTab('stream')">Stream</button>
+        <button id="upload-btn" class="px-4 py-2 font-medium text-green-600 dark:text-green-400 border-b-2 border-green-600 dark:border-green-400" onclick="showTab('upload')">Upload</button>
+        <button id="stream-btn" class="px-4 py-2 font-medium text-gray-600 dark:text-gray-300 border-b-2 border-transparent" onclick="showTab('stream')">Stream</button>
       </div>
       <div class="flex justify-end p-2">
         <input type="checkbox" id="edit-data-toggle" class="mr-2" onchange="toggleEditData()">
@@ -107,7 +108,7 @@
     <div class="text-center">
       <button onclick="saveLogsToDatabase()" class="px-8 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition">Save Logs to DB</button>    
     </div>
-   </main>  
+  </main>  
   <!-- Scripts -->
   <script>
     /* Tab switching */
@@ -226,7 +227,6 @@
       });
     }
 
-    // Function to gather log data from both tables and send to server for saving
     function saveLogsToDatabase() {
       let logs = [];
       function extractLogs(tableId) {
@@ -265,15 +265,12 @@
       .catch(err => { alert("Error: " + err); });
     }
 
-    // Toggle auto-refresh based on Edit Data checkbox
     function toggleEditData() {
       const checkbox = document.getElementById("edit-data-toggle");
-      // When checked, disable auto refresh so that edits aren't overwritten.
       autoRefreshEnabled = !checkbox.checked;
       console.log("Auto refresh enabled:", autoRefreshEnabled);
     }
 
-    // Periodically refresh logs only if auto refresh is enabled
     setInterval(() => {
       if (autoRefreshEnabled) {
         fetchAndPopulateLogs();
